@@ -1282,8 +1282,8 @@ df_all2 <- df_all %>%
   mutate(domain_score = cumsum(score2),
          domain_score_bl = sum(score2_bl, na.rm=TRUE),
          # Renal domain can be maximum score=3
-         domain_score = ifelse(domain_score>3,3, domain_score), 
-         domain_score_bl = ifelse(domain_score_bl>3,3, domain_score_bl)) 
+         domain_score = ifelse(domain=="Renal" & domain_score>3,3, domain_score), 
+         domain_score_bl = ifelse(domain=="Renal" & domain_score_bl>3,3, domain_score_bl)) 
 
 saveRDS(df_all2, file.path(datapath_derived, paste0(prefix, "_rbodi_all_diagnoses_scores.rds")))
 
