@@ -1,9 +1,8 @@
 #============================================================================.
 # Project: RBODI for assessing organ damage in SLE based on national register data
 # Author: Álvaro Gómez and Annica Dominicus 
-# Date: 2025-02-24, last update 2025-06-10
+# Date: 2025-02-24, Code based on original script from 2023-12-17
 # Purpose: Derive Register-based Organ Damage Index (RBODI) for SLE
-# Note: Code based on original script from 2023-12-17
 #============================================================================.
 
 # Program settings ---
@@ -539,13 +538,13 @@ cohort <- readRDS(file.path("data", "derived", "010_incident_cases.rds"))
 cohort$exitdate <- cohort$fu_end
 
 # Read in all diagnoses once and save data for study cohort
-oppen_all <- read_sas("K:/EA/SLE Linkage 2022/1. Raw data/Socialstyrelsen update VT2024/ut_r_par_ov_fk_12340_2024.sas7bdat")
+oppen_all <- read_sas(file.path(datapath_raw, "outpatient.sas7bdat"))
 names(oppen_all) <- tolower(names(oppen_all))
 oppen <- inner_join(select(cohort, lopnr), oppen_all)
 saveRDS(oppen, file.path(datapath_derived, paste0(prefix, "_oppen_all_cohort.rds")))
 rm(oppen_all)
 
-sluten_all <- read_sas("K:/EA/SLE Linkage 2022/1. Raw data/Socialstyrelsen update VT2024/ut_r_par_sv_fk_12340_2024.sas7bdat")
+sluten_all <- read_sas(file.path(datapath_raw, "inpatient.sas7bdat"))
 names(sluten_all) <- tolower(names(sluten_all))
 sluten <- inner_join(select(cohort, lopnr), sluten_all)
 saveRDS(sluten, file.path(datapath_derived, paste0(prefix, "_sluten_all_cohort.rds")))
@@ -557,7 +556,7 @@ sel_atc <- c("N05AH02", "N03", "B01AC23", "C04AD03", "A09AA02", "G03XC01",
              "G03CA03", "G03CA57", "G03CX01", "G03FA01", "G03FA12", "G03FA15",
              "G03FA17", "G03FB05", "G03FB06", "G03FB09", "A10")
 
-lm_all <- read_sas("K:/EA/SLE Linkage 2022/1. Raw data/Socialstyrelsen update VT2024/ut_r_lmed_fk_12340_2024.sas7bdat")
+lm_all <- read_sas(file.path(datapath_raw, "pdr.sas7bdat"))
 names(lm_all) <- tolower(names(lm_all))
 lm_co <- inner_join(select(cohort, lopnr), lm_all)
 lm <- filter_by_code(lm_co, sel_atc, code_column_name = "atc")
@@ -1281,7 +1280,7 @@ df_all2 <- df_all %>%
   group_by(lopnr, domain_code) %>%
   arrange(lopnr, domain_code, diag_date) %>%
   mutate(domain_score = cumsum(score2),
-         domain_score_bl = max(score2_bl, na.rm=TRUE),
+         domain_score_bl = sum(score2_bl, na.rm=TRUE),
          # Renal domain can be maximum score=3
          domain_score = ifelse(domain_score>3,3, domain_score), 
          domain_score_bl = ifelse(domain_score_bl>3,3, domain_score_bl)) 
